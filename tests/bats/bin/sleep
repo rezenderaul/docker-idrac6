@@ -1,0 +1,3 @@
+#!/bin/sh
+# Fake sleep: no-op for fast tests.
+exit 0

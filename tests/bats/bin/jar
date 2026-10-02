@@ -1,0 +1,4 @@
+#!/bin/sh
+# Fake jar: no-op extract, record args.
+echo "$*" >> "${FAKE_JAR_LOG:-/tmp/fake-jar.log}"
+exit 0

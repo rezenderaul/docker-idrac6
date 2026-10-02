@@ -1,0 +1,26 @@
+#!/bin/sh
+# Fake wget for BATS: records args, simulates download.
+# Env: FAKE_WGET_LOG (file), FAKE_WGET_FAIL_PATTERN (substring to fail on)
+echo "$*" >> "${FAKE_WGET_LOG:-/tmp/fake-wget.log}"
+url=""
+out=""
+prev=""
+for a in "$@"; do
+  case "$a" in
+    http*://*) url="$a" ;;
+  esac
+  if [ "$prev" = "-O" ]; then out="$a"; fi
+  prev="$a"
+done
+# default output: last arg basename when -O missing
+if [ -z "$out" ]; then
+  out="$(basename "$url")"
+fi
+if [ -n "${FAKE_WGET_FAIL_PATTERN:-}" ]; then
+  case "$url" in
+    *"$FAKE_WGET_FAIL_PATTERN"*) exit 1 ;;
+  esac
+fi
+mkdir -p "$(dirname "$out")"
+echo "fake-jar-content for $url" > "$out"
+exit 0

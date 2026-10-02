@@ -52,55 +52,60 @@ fi
 
 echo "Environment ok"
 
-cd /app
+APP_DIR="${APP_DIR:-/app}"
+cd "$APP_DIR" || exit 1
 
 if [ ! -d "lib" ]; then
     echo "Creating library folder"
-    mkdir lib
+    mkdir -p lib
 fi
 
 if [ ! -f avctKVM.jar ]; then
     echo "Downloading avctKVM"
 
-    wget https://${IDRAC_HOST}:${IDRAC_PORT}/software/avctKVM.jar --no-check-certificate
-
-    if [ ! $? -eq 0 ]; then
+    if ! wget "https://${IDRAC_HOST}:${IDRAC_PORT}/software/avctKVM.jar" --no-check-certificate; then
         echo "${RED}Failed to download avctKVM.jar, please check your settings${NC}"
         sleep 2
         exit 2
     fi
 fi
 
-if [ ! -f lib/avctKVMIOLinux64.jar ]; then
+if [ ! -f lib/avctKVMIOLinux64.jar ] && [ ! -f lib/avctKVMIOLinux.jar ]; then
     echo "Downloading avctKVMIOLinux64"
 
-    wget -O lib/avctKVMIOLinux64.jar https://${IDRAC_HOST}:${IDRAC_PORT}/software/avctKVMIOLinux64.jar --no-check-certificate
-
-    if [ ! $? -eq 0 ]; then
-        echo "${RED}Failed to download avctKVMIOLinux64.jar, please check your settings${NC}"
-        sleep 2
-        exit 2
+    if ! wget -O lib/avctKVMIOLinux64.jar "https://${IDRAC_HOST}:${IDRAC_PORT}/software/avctKVMIOLinux64.jar" --no-check-certificate; then
+        echo "Trying fallback avctKVMIOLinux.jar (R710)"
+        rm -f lib/avctKVMIOLinux64.jar
+        if ! wget -O lib/avctKVMIOLinux.jar "https://${IDRAC_HOST}:${IDRAC_PORT}/software/avctKVMIOLinux.jar" --no-check-certificate; then
+            echo "${RED}Failed to download avctKVMIOLinux64.jar, please check your settings${NC}"
+            sleep 2
+            exit 2
+        fi
     fi
 fi
 
 if [ ! -f lib/avctVMLinux64.jar ]; then
     echo "Downloading avctVMLinux64"
 
-    wget -O lib/avctVMLinux64.jar https://${IDRAC_HOST}:${IDRAC_PORT}/software/avctVMLinux64.jar --no-check-certificate
-
-    if [ ! $? -eq 0 ]; then
+    if ! wget -O lib/avctVMLinux64.jar "https://${IDRAC_HOST}:${IDRAC_PORT}/software/avctVMLinux64.jar" --no-check-certificate; then
         echo "${RED}Failed to download avctVMLinux64.jar, please check your settings${NC}"
         sleep 2
         exit 2
     fi
 fi
 
-cd lib
+cd lib || exit 1
 
-if [ ! -f lib/avctKVMIOLinux64.so ]; then
-    echo "Extracting avctKVMIOLinux64"
-
-    jar -xf avctKVMIOLinux64.jar
+if [ -f avctKVMIOLinux64.jar ]; then
+    if [ ! -f lib/avctKVMIOLinux64.so ] && [ ! -f avctKVMIOLinux64.so ]; then
+        echo "Extracting avctKVMIOLinux64"
+        jar -xf avctKVMIOLinux64.jar
+    fi
+elif [ -f avctKVMIOLinux.jar ]; then
+    if [ ! -f lib/avctKVMIOLinux.so ] && [ ! -f avctKVMIOLinux.so ]; then
+        echo "Extracting avctKVMIOLinux"
+        jar -xf avctKVMIOLinux.jar
+    fi
 fi
 
 if [ ! -f lib/avctVMLinux64.so ]; then
@@ -109,7 +114,7 @@ if [ ! -f lib/avctVMLinux64.so ]; then
     jar -xf avctVMLinux64.jar
 fi
 
-cd /app
+cd "$APP_DIR" || exit 1
 
 echo "${GREEN}Initialization complete, starting virtual console${NC}"
 
@@ -118,8 +123,8 @@ if [ -n "$IDRAC_KEYCODE_HACK" ]; then
 
     export LD_PRELOAD=/keycode-hack.so
 fi
-exec java -cp avctKVM.jar -Djava.library.path="./lib" com.avocent.idrac.kvm.Main ip=${IDRAC_HOST} kmport=5900 vport=5900 user=${IDRAC_USER} passwd=${IDRAC_PASSWORD} apcp=1 version=2 vmprivilege=true "helpurl=https://${IDRAC_HOST}:443/help/contents.html" &
+exec java -cp avctKVM.jar -Djava.library.path="./lib" com.avocent.idrac.kvm.Main "ip=${IDRAC_HOST}" kmport=5900 vport=5900 "user=${IDRAC_USER}" "passwd=${IDRAC_PASSWORD}" apcp=1 version=2 vmprivilege=true "helpurl=https://${IDRAC_HOST}:443/help/contents.html" &
 
 # If an iso exists at the specified location, mount it
-[ -f "/vmedia/$VIRTUAL_ISO" ] && /mountiso.sh
+[ -f "/vmedia/${VIRTUAL_ISO:-}" ] && /mountiso.sh
 wait

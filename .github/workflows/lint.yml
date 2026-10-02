@@ -1,0 +1,31 @@
+name: lint
+
+on:
+  push:
+    branches: [main, master, "ci/*", "fix/*", "feat/*"]
+  pull_request:
+
+jobs:
+  shell:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: bash syntax check
+        run: bash -n startapp.sh && bash -n mountiso.sh
+      - name: ShellCheck
+        uses: ludeeus/action-shellcheck@master
+        with:
+          severity: warning
+          scandir: .
+      - name: shfmt diff
+        run: |
+          go install mvdan.cc/sh/v3/cmd/shfmt@latest
+          ~/go/bin/shfmt -i 4 --diff startapp.sh mountiso.sh
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Hadolint
+        uses: hadolint/hadolint-action@v3.1.0
+        with:
+          dockerfile: Dockerfile
