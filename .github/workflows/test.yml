@@ -13,4 +13,4 @@ jobs:
       - name: Install BATS
         run: sudo apt-get update -qq && sudo apt-get install -y -qq bats
       - name: Run BATS suite
-        run: bats tests/bats/startapp.bats
+        run: bats tests/bats/
