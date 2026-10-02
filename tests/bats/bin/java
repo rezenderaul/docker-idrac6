@@ -1,0 +1,4 @@
+#!/bin/sh
+# Fake java: records each argv on its own line.
+printf '%s\n' "$@" >> "${FAKE_JAVA_LOG:-/tmp/fake-java.log}"
+exit 0

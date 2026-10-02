@@ -1,4 +1,20 @@
-# iDRAC 6 dockerized
+# iDRAC 6 dockerized (fork)
+
+> Fork de `DomiStyle/docker-idrac6` com CI (lint + BATS) e imagem própria.
+> iDRAC6-only nesta fatia. Upstream: https://github.com/DomiStyle/docker-idrac6
+
+## Imagem própria
+
+```
+docker run -d \
+  -p 5800:5800 \
+  -p 5900:5900 \
+  -e IDRAC_HOST=idrac1.example.org \
+  -e IDRAC_USER=root \
+  -e IDRAC_PASSWORD=1234 \
+  -v idrac6-app:/app \
+  ghcr.io/rezenderaul/idrac6:ci
+```
 
 <img src="https://i.imgur.com/Sg6qYtT.png" alt="Web interface" width="100%" />
 

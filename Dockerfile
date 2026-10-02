@@ -23,7 +23,7 @@ RUN apt-get update && \
     rm /keycode-hack.c
 
 RUN mkdir /app && \
-    chown ${USER_ID}:${GROUP_ID} /app
+    chown "${USER_ID}:${GROUP_ID}" /app
 
 RUN rm /usr/lib/jvm/zulu8-ca-amd64/jre/lib/security/java.security
 
