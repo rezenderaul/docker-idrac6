@@ -74,8 +74,28 @@ The web interface will be available on port 5800 while the VNC server can be acc
 |`IDRAC_VNC_PORT`| The optional port for the iDRAC KVM console (`kmport=`/`vport=` passed to the viewer). (5900 by default). Not the container's VNC port (`5900:5900` mapping). | No |
 |`IDRAC_KEYCODE_HACK`| If you have issues with keyboard input, try setting this to ``true``. See [here](https://github.com/anchor/idrac-kvm-keyboard-fix) for more infos. | No |
 |`VIRTUAL_MEDIA`| Filename of iso located within /vmedia to automount | No |
+|`SOCKS_PROXY_HOST`| Optional SOCKS5 proxy host for reaching BMCs on private subnets. Disabled by default. | No |
+|`SOCKS_PROXY_PORT`| Optional SOCKS5 proxy port. (1080 by default, used only when `SOCKS_PROXY_HOST` is set) | No |
 
 **For advanced configuration options please take a look [here](https://github.com/jlesage/docker-baseimage-gui#environment-variables).**
+
+## Usage with SOCKS proxy
+
+```
+# Tunnel to the network where the BMC lives:
+ssh -fND 1080 <remote-host>
+docker run -d \
+  -p 5800:5800 \
+  -p 5900:5900 \
+  -e IDRAC_HOST=idrac1.example.org \
+  -e IDRAC_USER=root \
+  -e IDRAC_PASSWORD=1234 \
+  -e SOCKS_PROXY_HOST=host.docker.internal \
+  -e SOCKS_PROXY_PORT=1080 \
+  ghcr.io/rezenderaul/idrac6:ci
+```
+
+NB: `host.docker.internal` works on macOS/Windows; on Linux use `--add-host=host.docker.internal:host-gateway` or the gateway IP.
 
 ## Volumes
 
