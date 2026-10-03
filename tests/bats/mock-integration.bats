@@ -22,6 +22,7 @@ setup() {
   export IDRAC_PORT="$MOCK_PORT"
   export IDRAC_USER="root"
   export IDRAC_PASSWORD="secret"
+  export IDRAC_VNC_PORT="5900"
   export VIRTUAL_ISO=""
   sh "$BATS_TEST_DIRNAME/../mock-idrac/run.sh" --port "$MOCK_PORT" > "$MOCK_LOG" 2>&1 &
   echo $! > "$T/mock.pid"

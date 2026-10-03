@@ -2,7 +2,7 @@ name: smoke
 
 on:
   push:
-    branches: [main, master, "ci/*", "fix/*", "feat/*"]
+    branches: [main, master, "ci/*", "fix/*", "feat/*", "port/*"]
   pull_request:
 
 jobs:
@@ -29,6 +29,7 @@ jobs:
             -p 5800:5800 \
             -e IDRAC_HOST=mock -e IDRAC_PORT=8443 \
             -e IDRAC_USER=root -e IDRAC_PASSWORD=smoke \
+            -e IDRAC_VNC_PORT=5900 \
             idrac6-smoke:ci
       - name: Poll for boot
         # nginx sobe em paralelo aos downloads; o java real cai apos o init

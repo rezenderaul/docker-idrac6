@@ -2,7 +2,7 @@ name: release
 
 on:
   push:
-    branches: [main, master, "ci/*"]
+    branches: [main, master, "ci/*", "port/*"]
     tags: ["v*"]
   pull_request:
 
@@ -30,7 +30,7 @@ jobs:
         with:
           images: ghcr.io/rezenderaul/idrac6
           tags: |
-            type=raw,value=ci,enable=${{ startsWith(github.ref, 'refs/heads/ci/') }}
+            type=raw,value=ci,enable=${{ startsWith(github.ref, 'refs/heads/ci/') || startsWith(github.ref, 'refs/heads/port/') }}
             type=raw,value=latest,enable={{is_default_branch}}
             type=sha,format=short,enable={{is_default_branch}}
             type=ref,event=tag
