@@ -1,0 +1,24 @@
+#!/bin/sh
+# Fake curl for BATS: records args, writes -o output, honors fail patterns.
+# Env: FAKE_CURL_LOG (file), FAKE_CURL_FAIL_PATTERN (substring to fail on)
+echo "$*" >> "${FAKE_CURL_LOG:-/tmp/fake-curl.log}"
+url=""
+out=""
+prev=""
+for a in "$@"; do
+  case "$a" in
+    http*://*) url="$a" ;;
+  esac
+  if [ "$prev" = "-o" ]; then out="$a"; fi
+  prev="$a"
+done
+if [ -n "${FAKE_CURL_FAIL_PATTERN:-}" ]; then
+  case "$url" in
+    *"$FAKE_CURL_FAIL_PATTERN"*) exit 1 ;;
+  esac
+fi
+if [ -n "$out" ]; then
+  mkdir -p "$(dirname "$out")"
+  echo "fake-jar-content for $url" > "$out"
+fi
+exit 0
