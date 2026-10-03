@@ -13,6 +13,7 @@ setup() {
   export IDRAC_HOST="idrac.test"
   export IDRAC_PORT="443"
   export IDRAC_USER="root"
+  export IDRAC_VNC_PORT="5900"
   : > "$FAKE_WGET_LOG"; : > "$FAKE_JAVA_LOG"; : > "$FAKE_JAR_LOG"
   export VIRTUAL_ISO=""
 }
