@@ -1,9 +1,11 @@
 # iDRAC 6 dockerized (fork)
 
-> Fork de `DomiStyle/docker-idrac6` com CI (lint + BATS) e imagem própria.
+> Fork de `DomiStyle/docker-idrac6` com CI (lint + BATS + smoke) e imagem própria.
 > iDRAC6-only nesta fatia. Upstream: https://github.com/DomiStyle/docker-idrac6
 
 ## Imagem própria
+
+Tags publicadas pelo CI (`release.yml`): `:ci` (branches `ci/*`), `:latest` + `:<sha>` (`master`), semver em tags `v*`.
 
 ```
 docker run -d \
@@ -15,6 +17,18 @@ docker run -d \
   -v idrac6-app:/app \
   ghcr.io/rezenderaul/idrac6:ci
 ```
+
+## Mock iDRAC local (smoke sem hardware)
+
+```bash
+sh tests/mock-idrac/run.sh --help
+sh tests/mock-idrac/run.sh --port 8443 &
+curl -k https://localhost:8443/software/avctKVM.jar
+```
+
+Limite conhecido: o mock serve jars fake, então o smoke valida até
+`Initialization complete` + `:5800` → 200 durante o boot — sessão KVM/VNC
+real não é coberta.
 
 <img src="https://i.imgur.com/Sg6qYtT.png" alt="Web interface" width="100%" />
 

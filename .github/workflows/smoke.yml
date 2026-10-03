@@ -1,0 +1,62 @@
+name: smoke
+
+on:
+  push:
+    branches: [main, master, "ci/*", "fix/*", "feat/*"]
+  pull_request:
+
+jobs:
+  mock-boot:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build image
+        run: docker build -t idrac6-smoke:ci .
+      - name: Start mock iDRAC
+        run: |
+          sh tests/mock-idrac/run.sh --port 8443 --cert-dir /tmp/mockcert \
+            > /tmp/mock.log 2>&1 &
+          echo $! > /tmp/mock.pid
+          for _ in $(seq 1 50); do
+            curl -k -s -o /dev/null https://localhost:8443/software/avctKVM.jar && break
+            sleep 0.2
+          done
+          curl -k -s -o /dev/null https://localhost:8443/software/avctKVM.jar
+      - name: Run container against mock
+        run: |
+          docker run -d --name smoke \
+            --add-host=mock:host-gateway \
+            -p 5800:5800 \
+            -e IDRAC_HOST=mock -e IDRAC_PORT=8443 \
+            -e IDRAC_USER=root -e IDRAC_PASSWORD=smoke \
+            idrac6-smoke:ci
+      - name: Poll for boot
+        # nginx sobe em paralelo aos downloads; o java real cai apos o init
+        # (jars fake), entao o :5800 eh verificado DURANTE o boot, nao depois.
+        run: |
+          web=0
+          for _ in $(seq 1 30); do
+            code=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:5800 || true)
+            [ "$code" = "200" ] && web=1 && break
+            sleep 2
+          done
+          [ "$web" -eq 1 ]
+          ok=0
+          for _ in $(seq 1 45); do
+            docker logs smoke 2>&1 | grep -q "Initialization complete" && ok=1 && break
+            sleep 2
+          done
+          [ "$ok" -eq 1 ]
+          grep -q '"GET /software/avctKVM.jar" 200' /tmp/mock.log
+          grep -q '"GET /software/avctKVMIOLinux64.jar" 200' /tmp/mock.log
+          grep -q '"GET /software/avctVMLinux64.jar" 200' /tmp/mock.log
+      - name: Dump logs on failure
+        if: failure()
+        run: |
+          echo "--- mock ---"; cat /tmp/mock.log || true
+          echo "--- container ---"; docker logs smoke 2>&1 || true
+      - name: Cleanup
+        if: always()
+        run: |
+          docker stop smoke 2>/dev/null || true
+          kill "$(cat /tmp/mock.pid)" 2>/dev/null || true
