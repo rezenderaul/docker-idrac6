@@ -7,6 +7,11 @@
 
 Tags publicadas pelo CI (`release.yml`): `:ci` (branches `ci/*`), `:latest` + `:<sha>` (`master`), semver em tags `v*`.
 
+| Plataforma | Status |
+|---|---|
+| `linux/amd64` | Suportada (CI + smoke) |
+| `linux/arm64` | Build publicado; smoke em RPi real pendente (follow-up) |
+
 ```
 docker run -d \
   -p 5800:5800 \
